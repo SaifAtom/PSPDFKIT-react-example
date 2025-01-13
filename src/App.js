@@ -1,4 +1,3 @@
-// App.js
 import { useState } from 'react'
 import PdfViewerComponent from './components/PdfViewerComponent'
 import './App.css'
@@ -11,14 +10,14 @@ function App () {
     setDocument(
       'https://api-xnt2upk1xwzg-server.agilix.io/uploads/document_38bf559f56.pdf'
     )
+
     setIsModalOpen(true)
-    console.log(document)
   }
 
   const handleClose = () => {
+    console.log('document ly thal', document)
     setIsModalOpen(false)
-    // Optional: clear the document after modal closes
-    // setTimeout(() => setDocument(null), 300);
+    setDocument(null) // Clear the document when modal closes
   }
 
   return (
@@ -34,7 +33,7 @@ function App () {
               ×
             </button>
             <div className='modal-pdf-viewer'>
-              <PdfViewerComponent document={document} />
+              {document && <PdfViewerComponent document={document} />}
             </div>
           </div>
         </div>

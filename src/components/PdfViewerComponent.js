@@ -1,45 +1,69 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
+import PSPDFKit from 'pspdfkit'
+
+const TOOLBAR_ICONS = {
+  'zoom-in': '/icons/zoom-in.svg',
+  'zoom-out': '/icons/zoom-out.svg',
+  'multi-annotations-selection': '/icons/select.svg',
+  pan: '/icons/pan.svg',
+  'zoom-mode': '/icons/fit-page.svg',
+  annotate: '/icons/annotation.svg',
+  'document-editor': '/icons/edit-doc.svg',
+  print: '/icons/print.svg',
+  ink: '/icons/draw.svg',
+  highlighter: '/icons/free-form-highlight.svg',
+  'text-highlighter': '/icons/text-highlight.svg',
+  'ink-eraser': '/icons/eraser.svg',
+  image: '/icons/image.svg',
+  link: '/icons/link.svg',
+  note: '/icons/note.svg',
+  text: '/icons/text.svg',
+  'export-pdf': '/icons/download.svg',
+  'document-crop': '/icons/document-crop.svg',
+  search: '/icons/search.svg',
+  'sidebar-thumbnails': '/icons/doc-thumbs.svg',
+  'sidebar-bookmarks': '/icons/bookmark.svg',
+  'sidebar-layers': '/icons/layers.svg',
+  'sidebar-annotations': '/icons/annotation.svg'
+}
 
 export default function PdfViewerComponent (props) {
   const containerRef = useRef(null)
   const instanceRef = useRef(null)
 
+  const toolbarItems = useMemo(() => {
+    const items = [...PSPDFKit.defaultToolbarItems]
+    return items.map(item => ({
+      ...item,
+      icon: TOOLBAR_ICONS[item.type] || item.icon
+    }))
+  }, [])
+
   useEffect(() => {
     const container = containerRef.current
-    let PSPDFKit
+
     ;(async function () {
       try {
-        PSPDFKit = await import('pspdfkit')
-
-        // Store instance in ref for access in save function
         const instance = await PSPDFKit.load({
           container,
           document: props.document,
           baseUrl: `${window.location.protocol}//${window.location.host}/${process.env.PUBLIC_URL}`,
+          styleSheets: ['/pdfViewerStyle.css'],
           toolbarItems: [
-            ...PSPDFKit.defaultToolbarItems,
+            ...toolbarItems,
             {
               type: 'custom',
               id: 'save',
               title: 'Save Document',
+              icon: '/icons/save.svg',
               onPress: async () => {
                 try {
-                  // Get the PDF as an ArrayBuffer
                   const arrayBuffer = await instance.exportPDF()
-                  console.log('Export successful', arrayBuffer)
-
-                  // Convert ArrayBuffer to Blob
                   const blob = new Blob([arrayBuffer], {
                     type: 'application/pdf'
                   })
-                  console.log('Blob created', blob)
-
-                  // Create FormData and append file
                   const formData = new FormData()
                   formData.append('file', blob, 'document.pdf')
-                  console.log('FormData created', formData)
-
-                  // Send to server
                   const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
@@ -51,8 +75,6 @@ export default function PdfViewerComponent (props) {
 
                   const result = await response.json()
                   console.log('Upload successful:', result)
-
-                  // Optionally show success message
                   alert('Document saved successfully!')
                 } catch (error) {
                   console.error('Error saving document:', error)
@@ -60,7 +82,7 @@ export default function PdfViewerComponent (props) {
                 }
               }
             },
-            { type: 'content-editor' }
+            { type: 'content-editor', icon: '/icons/content-edit.svg' }
           ]
         })
 
@@ -73,10 +95,10 @@ export default function PdfViewerComponent (props) {
 
     return () => {
       if (instanceRef.current) {
-        PSPDFKit && PSPDFKit.unload(container)
+        PSPDFKit.unload(container)
       }
     }
-  }, [props.document])
+  }, [props.document, toolbarItems])
 
   return (
     <div
