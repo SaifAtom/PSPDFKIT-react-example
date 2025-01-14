@@ -1,1 +1,10 @@
 /* my-pspdfkit.css */
+
+/* Customize the toolbar */
+.PSPDFKit-Toolbar {
+    background-color: #414A6E;
+}
+
+.PSPDFKit-Sidebar {
+    background-color: #5f647b;
+}
